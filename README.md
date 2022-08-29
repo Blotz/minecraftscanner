@@ -7,5 +7,5 @@
 ## Run as root
 
 ```bash
-# python3 -m minecraft-scanner
+# python3 -m minecraftscanner
 ```
