@@ -1,0 +1,3 @@
+recursive-include minecraftscanner/migrations/ *.sql
+include minecraftscanner/migrations
+include minecraftscanner/migrations/*.sql
