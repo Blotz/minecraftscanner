@@ -13,7 +13,7 @@ def scan(ip_range: str) -> list:
     port_scanner = masscan.PortScanner()
 
     try:
-        port_scanner.scan(ip_range, ports='25565', arguments='--max-rate 100000', sudo=True)
+        port_scanner.scan(ip_range, ports='25565', arguments='--max-rate 10000', sudo=True)
     except masscan.NetworkConnectionError:
         # print(f"Network connection error in {ip_range}")
         return []
