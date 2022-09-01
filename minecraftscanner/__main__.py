@@ -1,5 +1,6 @@
 #!/bin/python3
 
+from itertools import count
 from minecraftscanner.ip_scanner import scan, generate_ip_range
 from minecraftscanner.database import Database
 
@@ -137,17 +138,28 @@ def parse_server_json(db, server):
 def main():
     ip_range = generate_ip_range()
 
+    total = len(ip_range)
+    counter = 0
+
+    print(f"Scanning {total} IPs")
+
     with Pool(processes=multiprocessing.cpu_count()) as pool:
         results = pool.imap_unordered(scan, ip_range)
         
-        for mc_status  in results:
-            # print("############################")
-            # print(mc_status)
-            with Database("./mc_server.db") as db:
-                for server in mc_status:
-                    parse_server_json(db, server)
-                    db.connection.commit()
- 
+        try:
+            for mc_status  in results:
+                # print("############################")
+                # print(mc_status)
+                counter += 1
+                # Print percentage done
+                print(f"{counter}/{total} - {round(counter/total*100, 2)}%")
+
+                with Database("./mc_server.db") as db:
+                    for server in mc_status:
+                        parse_server_json(db, server)
+                        db.connection.commit()
+        except IndexError:
+            pass
                 
 
             
