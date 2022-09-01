@@ -6,6 +6,7 @@ from minecraftscanner.database import Database
 import multiprocessing
 from multiprocessing import Pool
 
+from sqlite3 import IntegrityError
 
 def parse_server_json(db, server):
     """    
@@ -59,12 +60,16 @@ def parse_server_json(db, server):
         description = server["description"]["text"]
     else:
         description = server["description"]
-
-    db.cursor.execute(
-        "INSERT INTO servers (ip, previewsChat, enforcesSecureChat, onlinePlayers, maxPlayers, version, protocol, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (ip, previewsChat, enforcesSecureChat, onlinePlayers, maxPlayers, version, protocol, description)
-    )
-    db.connection.commit()
+    
+    try:
+        db.cursor.execute(
+            "INSERT INTO servers (ip, previewsChat, enforcesSecureChat, onlinePlayers, maxPlayers, version, protocol, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (ip, previewsChat, enforcesSecureChat, onlinePlayers, maxPlayers, version, protocol, description)
+        )
+        db.connection.commit()
+    except IntegrityError:
+        print(f"ERROR - {ip} {previewsChat} {enforcesSecureChat} {onlinePlayers} {maxPlayers} {version} {protocol} {description}")
+        return
 
 
     ## Parse player info
@@ -73,15 +78,21 @@ def parse_server_json(db, server):
             uuid = player["id"]
             name = player["name"]
             if name!="" and uuid!="00000000-0000-0000-0000-000000000000":
-                db.cursor.execute(
-                    "INSERT OR IGNORE INTO players (uuid, name) VALUES (?, ?)",
-                    (uuid, name)
-                )
-                db.connection.commit()
-                db.cursor.execute(
-                    "INSERT INTO server_players (server, player) VALUES (?, ?)",
-                    (ip, uuid)
-                )
+                try:
+                    db.cursor.execute(
+                        "INSERT OR IGNORE INTO players (uuid, name) VALUES (?, ?)",
+                        (uuid, name)
+                    )
+                    db.connection.commit()
+                    db.cursor.execute(
+                        "INSERT INTO server_players (server, player) VALUES (?, ?)",
+                        (ip, uuid)
+                    )
+                    db.connection.commit()
+                except IntegrityError:
+                    print(f"ERROR - {ip} {uuid} {name}")
+                    pass
+
 
     ## Parse modpack info
     if "modpackData" in server:
@@ -90,30 +101,38 @@ def parse_server_json(db, server):
         version = server["modpackData"]["version"]
         versionID = server["modpackData"]["versionID"]
         isMetadata = server["modpackData"]["isMetadata"]
-        db.cursor.execute(
-            "INSERT INTO modpacks (projectID, name, version, versionID, isMetadata) VALUES (?, ?, ?, ?, ?)",
-            (projectID, name, version, versionID, isMetadata)
-        )
-        db.connection.commit()
-        db.cursor.execute(
-            "INSERT INTO server_modpacks (server, modpack) VALUES (?, ?)",
-            (ip, projectID)
-        )
+        try:
+            db.cursor.execute(
+                "INSERT INTO modpacks (projectID, name, version, versionID, isMetadata) VALUES (?, ?, ?, ?, ?)",
+                (projectID, name, version, versionID, isMetadata)
+            )
+            db.connection.commit()
+            db.cursor.execute(
+                "INSERT INTO server_modpacks (server, modpack) VALUES (?, ?)",
+                (ip, projectID)
+            )
+        except IntegrityError:
+            print(f"ERROR - {ip} {projectID} {name} {version} {versionID} {isMetadata}")
+            pass
 
     # Parse modlist info
     if "modinfo" in server:
         for mod in server["modinfo"]["modList"]:
             modid = mod["modid"]
             version = mod["version"]
-            db.cursor.execute(
-                "INSERT OR IGNORE INTO mods (modid, version) VALUES (?, ?)",
-                (modid, version)
-            )
-            db.connection.commit()
-            db.cursor.execute(
-                "INSERT INTO server_mods (server, mod, version) VALUES (?, ?, ?)",
-                (ip, modid, version)
-            )
+            try:
+                db.cursor.execute(
+                    "INSERT OR IGNORE INTO mods (modid, version) VALUES (?, ?)",
+                    (modid, version)
+                )
+                db.connection.commit()
+                db.cursor.execute(
+                    "INSERT INTO server_mods (server, mod, version) VALUES (?, ?, ?)",
+                    (ip, modid, version)
+                )
+            except IntegrityError:
+                print(f"ERROR - {ip} {modid} {version}")
+                pass
 
 def main():
     ip_range = generate_ip_range()
