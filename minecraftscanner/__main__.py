@@ -103,7 +103,7 @@ def parse_server_json(db, server):
         isMetadata = server["modpackData"]["isMetadata"]
         try:
             db.cursor.execute(
-                "INSERT INTO modpacks (projectID, name, version, versionID, isMetadata) VALUES (?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO modpacks (projectID, name, version, versionID, isMetadata) VALUES (?, ?, ?, ?, ?)",
                 (projectID, name, version, versionID, isMetadata)
             )
             db.connection.commit()
