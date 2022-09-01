@@ -72,15 +72,16 @@ def parse_server_json(db, server):
         for player in server["players"]["sample"]:
             uuid = player["id"]
             name = player["name"]
-            db.cursor.execute(
-                "INSERT OR IGNORE INTO players (uuid, name) VALUES (?, ?)",
-                (uuid, name)
-            )
-            db.connection.commit()
-            db.cursor.execute(
-                "INSERT INTO server_players (server, player) VALUES (?, ?)",
-                (ip, uuid)
-            )
+            if name!="" and uuid!="00000000-0000-0000-0000-000000000000":
+                db.cursor.execute(
+                    "INSERT OR IGNORE INTO players (uuid, name) VALUES (?, ?)",
+                    (uuid, name)
+                )
+                db.connection.commit()
+                db.cursor.execute(
+                    "INSERT INTO server_players (server, player) VALUES (?, ?)",
+                    (ip, uuid)
+                )
 
     ## Parse modpack info
     if "modpackData" in server:
