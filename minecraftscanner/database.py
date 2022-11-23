@@ -28,6 +28,7 @@ class Database:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        print("Closing Database Connection!")
         self.connection.close()
     
     def migrate(self, conn: sqlite3.Connection):
