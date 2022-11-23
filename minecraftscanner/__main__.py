@@ -136,6 +136,7 @@ def parse_server_json(db, server):
                 pass
 
 def main():
+    print("Starting up!")
     ip_range = generate_ip_range()
 
     total = len(ip_range)
@@ -149,7 +150,7 @@ def main():
         try:
             for mc_status  in results:
                 # print("############################")
-                # print(mc_status)
+                print(mc_status)
                 counter += 1
                 # Print percentage done
                 print(f"{counter}/{total} - {round(counter/total*100, 2)}%")
